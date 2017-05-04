@@ -1,0 +1,1378 @@
+-- Date      : Tue Oct 30 11:44:06 IST 2001
+-- Author    : Ori Naishtein
+ForeScout-MIB	DEFINITIONS ::= BEGIN
+        IMPORTS
+	        OBJECT-TYPE
+	                FROM RFC-1212
+	         TRAP-TYPE
+	  			FROM RFC-1215
+	        enterprises, TimeTicks, IpAddress, Counter
+	                FROM RFC1155-SMI;
+
+		DisplayString ::=
+              OCTET STRING
+          -- This data type is used to model textual information taken
+          -- from the NVT ASCII character set.  By convention, objects
+          -- with this syntax are declared as having
+
+          --
+          --      SIZE (0..255)
+
+
+        forescout	OBJECT IDENTIFIER
+                ::=  {  enterprises  11789  }
+
+        general	OBJECT IDENTIFIER
+                ::=  {  forescout  1  }
+
+        intrusion	OBJECT IDENTIFIER
+                ::=  {  forescout  2  }
+
+        counterACT	OBJECT IDENTIFIER
+                ::=  {  forescout  3  }
+
+        organization	OBJECT IDENTIFIER
+                ::=  {  forescout  4  }
+                
+        plugins	 OBJECT IDENTIFIER
+                ::=  {  organization  4  }
+
+        fsGenId	OBJECT-TYPE
+                SYNTAX			INTEGER  { counterACT ( 1 ) , managementServer ( 2 ) , unknown ( 3 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Identifies forescout agent - counterACT / Management Server"
+                DEFVAL			{ unknown }
+                ::=  {  general  1  }
+
+        fsGenVersion	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The current installed version"
+                DEFVAL			{ "unknown" }
+                ::=  {  general  2  }
+
+        fsGenLicenseExpirationDate	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "License expiration date represented as string"
+                ::=  {  general  3  }
+
+
+        database	OBJECT IDENTIFIER
+                ::=  {  general  4  }
+
+
+        intrudBlockedNumber	OBJECT-TYPE
+                SYNTAX			INTEGER  ( 0 .. 2147483647  )
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Number of currently blocked addresses"
+                ::=  {  intrusion  1  }
+
+        intrudOffensiveNumber	OBJECT-TYPE
+                SYNTAX			INTEGER  ( 0 .. 2147483647  )
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Number of currently offensive addresses"
+                ::=  {  intrusion  2  }
+
+
+
+		haStatus OBJECT-TYPE
+                SYNTAX                  INTEGER {a ( 1 ) , b ( 2 ) , c(3) , d(4)}
+                ACCESS                  read-only
+                STATUS                  mandatory
+                DESCRIPTION
+                                "Indicates HA status"
+                ::=  {  general  5  }
+
+
+       intrudBiteDetectionEventsTable	OBJECT-TYPE
+                SYNTAX		SEQUENCE  OF  IntrudBiteDetectionEventsEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                        "Table of last bite events"
+                ::=  { intrusion  3 }
+
+        intrudBiteDetectionEventsEntry	OBJECT-TYPE
+                SYNTAX		IntrudBiteDetectionEventsEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                        "A single detection event"
+                INDEX		{  biteEventIndex  }
+                ::=  { intrudBiteDetectionEventsTable 1 }
+
+        IntrudBiteDetectionEventsEntry  ::=  SEQUENCE {
+                biteEventIndex  Counter,
+                biteEventSourceAddress  IpAddress,
+                biteEventTime  TimeTicks,
+                biteEventType  OCTET STRING,
+                biteEventcounterACTOperation  INTEGER,
+		    biteEventcounterACTOperationDuration TimeTicks,
+		    biteEventSpecificDetails OCTET STRING,
+		    biteEventDestinationAddress IpAddress,
+		    biteEventDestinationPort INTEGER,
+		    biteEventProtocol INTEGER
+                }
+
+
+        biteEventIndex  OBJECT-TYPE
+                SYNTAX			Counter
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The index of the referenced event"
+                ::=  {  intrudBiteDetectionEventsEntry 1  }
+
+        biteEventTime	OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Time of the detection event"
+                ::=  {  intrudBiteDetectionEventsEntry 3  }
+
+
+
+        biteEventSourceAddress  	OBJECT-TYPE
+                SYNTAX			IpAddress
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The address of the intruder"
+                ::=  {  intrudBiteDetectionEventsEntry 2  }
+
+
+        biteEventType	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Attack method (e.g. port bite)"
+                ::=  {  intrudBiteDetectionEventsEntry 4  }
+
+
+        biteEventcounterACTOperation  OBJECT-TYPE
+                SYNTAX			INTEGER  { default ( 0 ) , ignore ( 1 ) , block ( 2 ) , monitor ( 3 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The action took place in CounterACT as a respond to the detected event"
+                ::=  {  intrudBiteDetectionEventsEntry 5  }
+
+        biteEventcounterACTOperationDuration OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Period in which CounterACT action will be effective"
+                ::=  {  intrudBiteDetectionEventsEntry 6  }
+
+
+        biteEventSpecificDetails 	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Event specific attributes (e,g. user name)"
+                ::=  {  intrudBiteDetectionEventsEntry 7  }
+
+	  biteEventDestinationAddress  	OBJECT-TYPE
+                SYNTAX			IpAddress
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The address of the attacked host"
+                ::=  {  intrudBiteDetectionEventsEntry 8  }
+
+	 biteEventDestinationPort  OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The port used by this event"
+                ::=  {  intrudBiteDetectionEventsEntry 9  }
+
+ 	biteEventProtocol  OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Protocol used (e.g. TCP, UDP, ICMP)"
+                ::=  {  intrudBiteDetectionEventsEntry 10  }
+
+       intrudScanDetectionEventsTable	OBJECT-TYPE
+                SYNTAX		SEQUENCE  OF  IntrudScanDetectionEventsEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                        "Table of last scan events"
+                ::=  { intrusion  5 }
+
+        intrudScanDetectionEventsEntry	OBJECT-TYPE
+                SYNTAX		IntrudScanDetectionEventsEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                        "A single detection event"
+                INDEX		{  scanEventIndex  }
+                ::=  { intrudScanDetectionEventsTable 1 }
+
+        IntrudScanDetectionEventsEntry  ::=  SEQUENCE {
+                scanEventIndex  Counter,
+		    scanEventSourceAddress  IpAddress,
+                scanEventTime  TimeTicks,
+		    scanEventType  OCTET STRING,
+                scanEventcounterACTOperation  INTEGER,
+		    scanEventcounterACTOperationDuration TimeTicks
+                }
+
+
+        scanEventIndex  OBJECT-TYPE
+                SYNTAX			Counter
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The index of the referenced event"
+                ::=  {  intrudScanDetectionEventsEntry 1  }
+
+
+        scanEventSourceAddress  	OBJECT-TYPE
+                SYNTAX			IpAddress
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The address of the intruder"
+                ::=  {  intrudScanDetectionEventsEntry 2  }
+
+        scanEventTime	OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Time of the detection event"
+                ::=  {  intrudScanDetectionEventsEntry 3  }
+
+
+        scanEventType	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Scan method (e.g. port scan)"
+                ::=  {  intrudScanDetectionEventsEntry 4  }
+
+
+        scanEventcounterACTOperation  OBJECT-TYPE
+                SYNTAX			INTEGER  { default ( 0 ) , ignore ( 1 ) , block ( 2 ) , monitor ( 3 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The action took place in CounterACT as a respond to the detected event"
+                ::=  {  intrudScanDetectionEventsEntry 5  }
+
+        scanEventcounterACTOperationDuration OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Period in which CounterACT action will be effective"
+                ::=  {  intrudScanDetectionEventsEntry 6  }
+
+
+       intrudProbeEventsTable	OBJECT-TYPE
+                SYNTAX		SEQUENCE  OF  IntrudProbeEventsEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                        "Table of last probe events"
+                ::=  { intrusion  6 }
+
+        intrudProbeEventsEntry	OBJECT-TYPE
+                SYNTAX		IntrudProbeEventsEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                        "A single detection event"
+                INDEX		{  probeEventIndex  }
+                ::=  { intrudProbeEventsTable 1 }
+
+        IntrudProbeEventsEntry  ::=  SEQUENCE {
+                probeEventIndex  Counter,
+                probeEventSourceAddress  IpAddress,
+                probeEventTime  TimeTicks,
+                probeEventType  OCTET STRING,
+                probeEventScanIndex  INTEGER,
+		    probeEventDestinationAddress IpAddress,
+		    probeEventDestinationPort INTEGER,
+		    probeEventProtocol INTEGER,
+		    probeEventSpecificDetails OCTET STRING
+                }
+
+
+        probeEventIndex  OBJECT-TYPE
+                SYNTAX			Counter
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The index of the referenced event"
+                ::=  {  intrudProbeEventsEntry 1  }
+
+
+
+        probeEventSourceAddress  	OBJECT-TYPE
+                SYNTAX			IpAddress
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The address of the intruder"
+                ::=  {  intrudProbeEventsEntry 2  }
+
+        probeEventTime	OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Time of the detection event"
+                ::=  {  intrudProbeEventsEntry 3  }
+
+
+        probeEventType	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The used probe method (e.g. port scan)"
+                ::=  {  intrudProbeEventsEntry 4  }
+
+
+        probeEventScanIndex  OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The index of the attached detected scan event "
+                ::=  {  intrudProbeEventsEntry 5  }
+
+	  probeEventDestinationAddress  	OBJECT-TYPE
+                SYNTAX			IpAddress
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The address of the attacked host"
+                ::=  {  intrudProbeEventsEntry 6  }
+
+	 probeEventDestinationPort  OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The port used by this event"
+                ::=  {  intrudProbeEventsEntry 7  }
+
+ 	probeEventProtocol  OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Protocol used (e.g. TCP, UDP, ICMP)"
+                ::=  {  intrudProbeEventsEntry 8  }
+
+
+        probeEventSpecificDetails 	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Event specific attributes (e,g. user name)"
+                ::=  {  intrudProbeEventsEntry 9  }
+
+
+
+
+        intrudTotlaActiveNumber	OBJECT-TYPE
+                SYNTAX			INTEGER  ( 0 .. 2147483647  )
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Total number of  active hosts"
+                ::=  {  intrusion  4  }
+
+
+	intrudServiceAttackEventsTable	OBJECT-TYPE
+                SYNTAX		SEQUENCE  OF  IntrudServiceAttackEventsEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                        "Table of last service scan detected events"
+                ::=  { intrusion  7 }
+
+
+	  intrudServiceAttackEventsEntry	OBJECT-TYPE
+                SYNTAX		IntrudServiceAttackEventsEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                        "A single service scan detection event"
+                INDEX		{  serviceAttackEventIndex  }
+                ::=  { intrudServiceAttackEventsTable 1 }
+
+
+
+        IntrudServiceAttackEventsEntry ::=  SEQUENCE {
+            serviceAttackEventIndex  Counter,
+            serviceAttackEventDetectionTime  TimeTicks,
+		    serviceAttackEventDetectionMode INTEGER,
+		    serviceAttackEventDestinationPort INTEGER,
+		    serviceAttackEventDestinationProtocol INTEGER,
+            serviceAttackEventcounterACTOperation  INTEGER,
+		    serviceAttackEventcounterACTOperationDuration TimeTicks
+            }
+
+        serviceAttackEventIndex  OBJECT-TYPE
+                SYNTAX			Counter
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The index of the referenced event"
+                ::=  {  intrudServiceAttackEventsEntry 1  }
+
+        serviceAttackEventDetectionTime  OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Time of the detection event"
+                ::=  {  intrudServiceAttackEventsEntry 2  }
+
+        serviceAttackEventDetectionMode OBJECT-TYPE
+                SYNTAX			INTEGER { counterACT ( 0 ) , manual ( 1 )}
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Was the service scan detected by CounterACT or added manualy by the user "
+                ::=  {  intrudServiceAttackEventsEntry 3  }
+
+	 serviceAttackEventDestinationPort  OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The scanned port"
+                ::=  {  intrudServiceAttackEventsEntry 4  }
+
+	 serviceAttackEventDestinationProtocol  OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The scanned protocol"
+                ::=  {  intrudServiceAttackEventsEntry 5  }
+
+
+        serviceAttackEventcounterACTOperation  OBJECT-TYPE
+                SYNTAX			INTEGER  { default ( 0 ) , ignore ( 1 ) , block ( 2 ) , monitor ( 3 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The action took place in CounterACT as a respond to the detected event"
+                ::=  {  intrudServiceAttackEventsEntry 6  }
+
+        serviceAttackEventcounterACTOperationDuration OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Period in which CounterACT action will be effective"
+                ::=  {  intrudServiceAttackEventsEntry 7  }
+
+
+        cactEngineLastStart	OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Last time engine was started"
+                DEFVAL			{ 0 }
+                ::=  {  counterACT  1  }
+
+        cactEngineLastShutdown	OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Last time engine was shutdown"
+                DEFVAL			{ 0 }
+                ::=  {  counterACT  2  }
+
+        cactCurrentPolicyName	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The current defined policy name"
+                ::=  {  counterACT  3  }
+
+        cactCurrentBitePolicy    OBJECT-TYPE
+                SYNTAX          INTEGER { unknown( 0 ) ,block ( 1 ) ,monitor ( 2 ) , mixed ( 3 )}
+                ACCESS          read-only
+                STATUS          mandatory
+                DESCRIPTION
+                                "The current bite policy - how do CounterACT handle detected bite "
+                ::= {   counterACT 4 }
+
+        cactHandeledPackets	OBJECT-TYPE
+                SYNTAX			Counter
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Total number of packets being handeled by CounterACT"
+                ::=  {  counterACT  5  }
+
+        cactHandeledBytes	OBJECT-TYPE
+                SYNTAX			Counter
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Total number of bytes being handeled by CounterACT"
+                ::=  {  counterACT  6  }
+
+        cactEngineCpuUsage	OBJECT-TYPE
+                SYNTAX			INTEGER  ( 0 .. 100  )
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Precentage of engine's CPU usage"
+                DEFVAL			{ 0 }
+                ::=  {  counterACT  7  }
+
+        cactTotalCpuUsage	OBJECT-TYPE
+                SYNTAX			INTEGER  ( 0 .. 100  )
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Total CPU usage at CounterACT's machine"
+                DEFVAL			{ 0 }
+                ::=  {  counterACT  8  }
+
+        cactTotalMemUsage	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Amount of memory (in Kb) currently used at CounterACT machine"
+                DEFVAL			{ 0 }
+                ::=  {  counterACT  9  }
+
+
+
+        cactEngineMemUsage	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Amount of memory (in Kb) currently used by the engine process"
+                DEFVAL			{ 0 }
+                ::=  {  counterACT  10  }
+
+        cactAcuMemUsage	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Amount (in Kb) of memory used by the ACU process"
+                ::=  {  counterACT  11  }
+
+        cactPhysicalMem	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The physical memory (in Kb) capacity at CounterACT's machine"
+                ::=  {  counterACT  12  }
+
+        cactSwapMem	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The available swap memory (in Kb) capacity at CounterACT's machine"
+                ::=  {  counterACT  13  }
+
+        cactDiskPartitionTable	OBJECT-TYPE
+                SYNTAX		SEQUENCE  OF  CactDiskPartitionEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                            "Disk partitions at CounterACT's machine"
+                ::=  { counterACT  14 }
+
+        cactDiskPartitionEntry	OBJECT-TYPE
+                SYNTAX		CactDiskPartitionEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                            "Single partition"
+                INDEX		{  name  }
+                ::=  { cactDiskPartitionTable 1 }
+
+        CactDiskPartitionEntry  ::=  SEQUENCE {
+                name  OCTET STRING,
+                totalSpace  INTEGER,
+                usedSpace  INTEGER
+                }
+
+
+        name	OBJECT-TYPE
+                SYNTAX			OCTET STRING (SIZE(100))
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Name of the partition"
+                ::=  {  cactDiskPartitionEntry  1  }
+
+
+        totalSpace	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Total amount of disk space (in Kb) under this partition"
+                ::=  {  cactDiskPartitionEntry  2  }
+
+
+        usedSpace	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Amount of disk space (in Kb) currently used under this partition"
+                ::=  {  cactDiskPartitionEntry  3  }
+
+
+        cactLastWarning	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Last system warning"
+                DEFVAL			{ "unknown" }
+                ::=  {  counterACT  19  }
+
+        cactPEParamRefresh	OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Packet engine parameter refresh"
+                DEFVAL			{ 0 }
+                ::=  {  counterACT  20  }
+                
+                
+        fsTrapSeverity 	OBJECT-TYPE
+                SYNTAX			INTEGER  { cleared ( 1 ) , indeterminate ( 2 ) , critical ( 3 ), major ( 4 ), minor ( 5 ), warning ( 6 ), info ( 7 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Assigned event severity. The following are the possible severity level assignments: Cleared (assigned value = 1): Indicates the clearing of one or more previously reported alarms. This alarm clears all alarms for this managed object that have the same Alarm type, Probable cause and Specific problems (if given). Indeterminate (assigned value = 2): Indicates that the severity level cannot be determined. Critical (assigned value = 3): Indicates that a service affecting condition has occurred and an immediate corrective action is required. Such a severity can be reported, for example, when a managed object becomes totally out of service and its capability must be restored. Major (assigned value = 4): Indicates that a service affecting condition has developed and an urgent corrective action is required. Such a severity can be reported, for example, when there is a severe degradation in the capability of the managed object and its full capability must be restored. Minor (assigned value = 5): Indicates the existence of a non-service affecting fault condition and that corrective action should be taken in order to prevent a more serious (for example, service affecting) fault. Such a severity can be reported, for example, when the detected alarm condition is not currently degrading the capacity of the managed object. Warning (assigned value = 6): Indicates the detection of a potential or impending service affecting fault, before any significant effects have been felt. Action should be taken to further diagnose (if necessary) and correct the problem in order to prevent it from becoming a more serious service affecting fault. Informational (assigned value = 7): Provided for informational purposes only. With the exception of the Informational severity, all the other severity levels are defined in the CCITT standard X.733."
+                ::=  {  counterACT  21  }
+                
+        fsTrapTime 	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Date and time that the event occurred in the Appliance, provided in the format of the DateAndTime field, which is specified in the SNMPv2-Textual Conventions standard."
+                ::=  {  counterACT  22  }
+                
+        fsTrapId 	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Unique identifier for each issued, trap notification. The ID is a counter based number representing a non-negative integer which monotonically increases until the assigned ID reaches its maximum value. When reaching its maximum, assigned value, the ID wraps around and begins increasing again from zero."
+                ::=  {  counterACT  23  }
+
+        fsFieldOid 	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The OID of the changed attribute. For example, if the CounterACT operator changed the ArcSight server name, this varbind contains the OID of the arcSightServerName."
+                ::=  {  counterACT  24  }
+                
+        fsOldValue 	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The former value of the MIB attribute, that is, the attribute value before making the configuration change."
+                ::=  {  counterACT  25  }
+                
+        fsNewValue 	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The updated value of the MIB attribute, that is, the attribute value after making the configuration change."
+                ::=  {  counterACT  26  }
+
+
+        orgRegisteredCounterACTTable	OBJECT-TYPE
+                SYNTAX		SEQUENCE  OF  OrgRegisteredCounterACTEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                            "Current registered appliances"
+                ::=  { organization  1 }
+
+        orgRegisteredCounterACTEntry	OBJECT-TYPE
+                SYNTAX		OrgRegisteredCounterACTEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                            "A single registered counterACT"
+                INDEX		{  counterACTId  }
+                ::=  { orgRegisteredCounterACTTable 1 }
+
+        OrgRegisteredCounterACTEntry  ::=  SEQUENCE {
+                counterACTId  OCTET STRING,
+                counterACTAddress  IpAddress,
+                counterACTConnectionStatus  INTEGER,
+                counterACTLastConnectionStatusTime  TimeTicks
+                }
+
+
+        counterACTId	OBJECT-TYPE
+                SYNTAX			OCTET STRING (SIZE(100))
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "counterACT identifier"
+                ::=  {  orgRegisteredCounterACTEntry  1  }
+
+
+        counterACTAddress	OBJECT-TYPE
+                SYNTAX			IpAddress
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "counterACT's address"
+                ::=  {  orgRegisteredCounterACTEntry  2  }
+
+
+        counterACTConnectionStatus	OBJECT-TYPE
+                SYNTAX			INTEGER  { unknown ( 0 ) , connected ( 1 ) , disconnected ( 2 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "counterACT's connection to the CCU status"
+                ::=  {  orgRegisteredCounterACTEntry  3  }
+
+
+        counterACTLastConnectionStatusTime	OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Last time connection status was changed"
+                ::=  {  orgRegisteredCounterACTEntry  4  }
+		
+		orgRegisteredCounterACT2Table	OBJECT-TYPE
+                SYNTAX		SEQUENCE  OF  OrgRegisteredCounterACT2Entry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                            "Current registered appliances"
+                ::=  { organization  2 }
+
+        orgRegisteredCounterACT2Entry	OBJECT-TYPE
+                SYNTAX		OrgRegisteredCounterACT2Entry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                            "A single registered counterACT"
+                INDEX		{  counterACT2Id  }
+                ::=  { orgRegisteredCounterACT2Table 1 }
+
+        OrgRegisteredCounterACT2Entry  ::=  SEQUENCE {
+                counterACT2Id  OCTET STRING,
+                counterACT2Address  OCTET STRING,
+				counterACT2AddressType  INTEGER,
+                counterACT2ConnectionStatus  INTEGER,
+                counterACT2LastConnectionStatusTime  TimeTicks
+                }
+
+
+        counterACT2Id	OBJECT-TYPE
+                SYNTAX			OCTET STRING (SIZE(100))
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "counterACT identifier"
+                ::=  {  orgRegisteredCounterACT2Entry  1  }
+
+
+        counterACT2Address	OBJECT-TYPE
+                SYNTAX			OCTET STRING (SIZE(100))
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "counterACT's address"
+                ::=  {  orgRegisteredCounterACT2Entry  2  }
+				
+		counterACT2AddressType	OBJECT-TYPE
+                SYNTAX			INTEGER  {unknown( 0 ) , ipv4( 1 ) , ipv6( 2 ) , ipv4z( 3 ) , ipv6z( 4 ) , dns( 16 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "counterACT's address"
+                ::=  {  orgRegisteredCounterACT2Entry  3  }
+
+        counterACT2ConnectionStatus	OBJECT-TYPE
+                SYNTAX			INTEGER  { unknown ( 0 ) , connected ( 1 ) , disconnected ( 2 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "counterACT's connection to the CCU status"
+                ::=  {  orgRegisteredCounterACT2Entry  4  }
+
+
+        counterACT2LastConnectionStatusTime	OBJECT-TYPE
+                SYNTAX			TimeTicks
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Last time connection status was changed"
+                ::=  {  orgRegisteredCounterACT2Entry  5  }
+
+
+
+
+        ctDeviceTable	OBJECT-TYPE
+                SYNTAX		SEQUENCE  OF  CtDeviceEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                            "The table of CounterACT devices managed by this host. For Enterprise Manager (EM) this would return the list of all the managed appliances. For EM managed or standalone Appliance this table would contain a single entry representing the status of this host. Whenever the administrator adds or removes CounterACT devices from the EM a trap notification will be sent from the EM indicating that the configuration has changed."
+                ::=  { organization  3 }
+
+		ctDeviceEntry	OBJECT-TYPE
+                SYNTAX		CtDeviceEntry
+                ACCESS		not-accessible
+                STATUS		mandatory
+                DESCRIPTION
+                            "An entry containing a CounterACT device identification information and information describing its status."
+                INDEX		{ ctDeviceId }
+                ::=  { ctDeviceTable 1 }
+
+        CtDeviceEntry  ::=  SEQUENCE {
+                ctDeviceId  OCTET STRING,
+                ctDeviceIpAddress  OCTET STRING,
+                ctDeviceIpAddressType  INTEGER,
+                ctDeviceConnectionStatus  INTEGER,
+				ctDeviceCpuUtilization  INTEGER,
+				ctDeviceMemorySwaps  INTEGER,
+				ctDeviceNtpStatus  INTEGER,
+				ctDeviceLicenseStatus  INTEGER,
+				ctDeviceHaStatus  INTEGER,
+				ctDeviceCurrentBandwidth  INTEGER,
+				ctDeviceEngineStatus  INTEGER,
+				ctNumberOfManagedEndpoints  INTEGER,
+				ctDevicePacketLoss  INTEGER,
+				ctDeviceActionsOnHoldStatus  INTEGER,
+                ctDeviceChannelStatus  INTEGER,
+				ctDeviceAutomaticFailoverStatus  INTEGER,
+                ctDeviceAutomaticFailoverConfig  INTEGER,
+                ctApplianceGroupName  OCTET STRING,
+                ctNumberOfFailoverEndpoints  INTEGER,
+                ctNumberOfFailoverExcessEndpoints  INTEGER
+                }    
+
+        ctDeviceId	OBJECT-TYPE
+                SYNTAX			OCTET STRING (SIZE(100))
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "A unique identifier used to identify a managed CounterACT device. This internally defined value is commonly used with trap notifications providing consistent reference to the appliance throughout its life and for as long as it is associated with the EM."
+                ::=  {  ctDeviceEntry  1  }
+
+        ctDeviceIpAddress 	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The IP address of the CounterACT Appliance or the Enterprise Manager(EM) as perceived by the EM."
+                ::=  {  ctDeviceEntry  2  } 
+
+        ctDeviceIpAddressType 	OBJECT-TYPE
+                SYNTAX			INTEGER  { iPv6 ( 1 ) , iPv4 ( 2 ) , unknown ( 3 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Type of IP address, for example, an IPv4 address type or an IPv6 address type. A value that represents a type of CounterACT Internet address. This value would be ipv4(1) indicating that the IPv4 address as defined by the InetAddressIPv4 textual convention. ipv6(2) indicating an IPv6 address as defined by the InetAddressIPv6 textual convention."
+                ::=  {  ctDeviceEntry  3  } 
+
+       ctDeviceConnectionStatus 	OBJECT-TYPE
+                SYNTAX			INTEGER  { connectionOK ( 1 ) , connectionFailed ( 2 ), connectionStatusUnknown ( 3 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the status of the CounterACT device network connectivity. Possible states are: connectionOK (1) Indicate that the CounterACT device is up and ready. connectionFailed (2) possibly due to network outage or appliance down. connectionStatusUnknown (3) Indicates that the connection status cannot be verified at this time (for example if the CounterACT device is down or unreachable)."
+                ::=  {  ctDeviceEntry  4  }
+
+        ctDeviceCpuUtilization	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Percentage of CounterACT Appliance allocated CPU resources being used."
+                ::=  {  ctDeviceEntry  5  } 
+
+        ctDeviceMemorySwaps	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Amount of memory swap (kbytes) consecutively occurring over the last minute. If this value exceeds the recommended threshold, the system may work slowly. To resolve this issue, add physical memory to the Appliance or replace the Appliance with a new Appliance that has more physical memory."
+                ::=  {  ctDeviceEntry  6  }      
+
+        ctDeviceNtpStatus	OBJECT-TYPE
+                SYNTAX			INTEGER  { syncOk ( 1 ) , syncFailed ( 2 ) , notApplicable ( 3 ), statusUnknown ( 4 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the status of the CounterACT device network time synchronization service; it is responsible for the monitoring the status of the synchronization process with the associated NTP server. Possible states are: ntpSyncOk (1) Indicates the CounterACT device synchronization process with the NTP server is OK. ntpSyncFailed (2) Indicates the CounterACT device failed to connect or failed to get valid response from the NTP server. ntpNotApplicable (3) Indicate that the NTP is not configured or that the NTP service is down. ntpStatusUnknown (4) Indicates that the CounterACT device is currently unreachable and that the current status cannot be verified."
+                ::=  {  ctDeviceEntry  7  } 
+
+       ctDeviceLicenseStatus	OBJECT-TYPE
+                SYNTAX			INTEGER  { valid ( 1 ) , violation ( 2 ) , invalid ( 3 ) , statusUnknown (4) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the status of the CounterACT device licensing service; it is responsible for the monitoring the status of the licensed modules and their usage. Possible states are: licenseValid(1) indicate that the current license status is OK and within the licensed capacity. licenseViolation(2) indicate that there are one or more license violations, for example services running or their capacity is exceeding the currently deployed licenses. licenseInvalid (3) indicates that the currently deployed license is expired or invalid. licenseStatusUnknown(4) indicates that the license status cannot be verified at this time (for example CounterACT device is down or unreachable)."
+                ::=  {  ctDeviceEntry  8 } 
+
+        ctDeviceHaStatus	OBJECT-TYPE
+                SYNTAX			INTEGER  { ok ( 1 ) , statusDegraded ( 2 ) , inMaintenanceMode ( 3 ), notSupported ( 4 ), statusUnknown ( 5 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the status of the High Availability (HA) service, which monitors the status of the active and the passive (standby) Appliances in a High Availability cluster. Possible states are: ok (1) Indicates that the standby CounterACT device is up, responsive and is in sync with the active CounterACT device. statusDegraded (2) Indicates that the standby CounterACT device is unreachable, down, or currently out of sync with the active CounterACT device. inMaintenanceMode(3) Indicates that the active or the standby CounterACT device is currently undergoing maintenance operations such as setup or upgrade. notSupported (4) Indicates that High Availability is not supported or configured on this Appliance. statusUnknown (5) Indicates that the High Availability status cannot be determined because the Enterprise Manager cannot connect to the Appliance."
+                ::=  {  ctDeviceEntry  9  } 
+
+         ctDeviceCurrentBandwidth	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "A measurement of bit-rate of consumed by the CounterACT device communication resources expressed in kilobytes bits per second; averaging over a consecutive sliding window (see user guide for more details) accounting for internal traffic between CounterACT devices and traffic handled by the packet engine. If this value exceeds the recommended threshold, the CounterACT device may work slowly. To resolve this issue, contact ForeScout support or sales representative."
+                ::=  {  ctDeviceEntry  10  }        
+
+        ctDeviceEngineStatus 	OBJECT-TYPE
+                SYNTAX			INTEGER  { ready ( 1 ) , initializing ( 2 ), down ( 3 ), statusUnknown ( 4 ), notApplicable ( 5 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the status of the packet engine service; it is responsible for the monitoring of network traffic and the discovery of network endpoints. Possible states are: engineReady (1) indicating that the packet engine is up and ready. engineInitlizing (2) indicates that  the packet engine is stating up and currently initializing. engineDown (3) Indicates that the  packet engine is currently down. engineStatusUnknown (4) indicates  that, at the present time, the packet engine status cannot be verified. For example, if the CounterACT device is down or unreachable. engineNotApplicable (5) indicates  that the packet engine is administratively disabled."
+                ::=  {  ctDeviceEntry  11  }  
+
+        ctNumberOfManagedEndpoints 	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The total number of endpoints currently being managed by the CounterACT Appliance."
+                ::=  {  ctDeviceEntry  12  }
+
+        ctDevicePacketLoss 	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The percent of the received IP packets representing the packet loss, that is, the amount of packets that were not handled by the CounterACT Appliance over a sliding window of the last 30 seconds. When packet loss exceeds the recommended thresholds HTTP Redirection and Virtual Firewall may not work consistently. For the same source and destination, they might work in some cases and fail in others. To resolve, upgrade the Appliance or configure the channels to monitor less traffic."
+                ::=  {  ctDeviceEntry  13  }
+
+        ctDeviceActionsOnHoldStatus 	OBJECT-TYPE
+                SYNTAX			INTEGER  { ok ( 1 ) , blockedOnExceedingThreshold ( 2 ) , blockStatusUnknown ( 3 )}
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the CounterACT appliance pending actions queue status; it indicates if there are policy driven actions that were blocked because of the number of pending actions exceeded the administrator defined queue size. Possible states are: actionsOk (1) indicates that policy actions are within the administrator predefined threshold, and that there are no policy driven actions in a blocked state. actionsBlockedOnExceedingTreshold(2) Indicates that one or more policies have created a queue of actions that exceeds the administrator defined threshold. It is expected that the CounterACT operator would manually decide if he wishes to commit or delete the blocked actions in the queue.  actionsBlockStatusUnknown (3) Indicates that the queue status cannot be verify if the CounterACT has actions in pending state and if they are blocked or not at this time (for example if the CounterACT device is down or unreachable)"
+                ::=  {  ctDeviceEntry  14  }    
+
+        ctDeviceChannelStatus 	OBJECT-TYPE
+                SYNTAX			INTEGER  { ok ( 1 ) , warning ( 2 ), error ( 3 ), unknown ( 4 ) , notApplicable ( 5 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the status of the CounterACT appliance packet engine monitored traffic (channel) status; it indicates if there are policy driven actions that were blocked because of the number of pending actions exceeded the administrator defined queue size. Possible states are: channelsOk (1) indicates that the CounterACT device is currently monitoring network traffic. channelsWarning (2) indicates that the CounterACT device has degraded ability to monitor network traffic and or temporarily limited in its ability to protect (for example with actions such as virtual firewall). channelsError (3) indicates that the CounterACT device is unable to monitor network traffic and or unable to protect (for example with actions like virtual firewall). channeStatuslsUnknown(4) indicates that the traffic mirroring status cannot be verified at this time (for example if the CounterACT device is down or unreachable). channelsStatusNotApplicable(5) indicates that the network interfaces configuration for traffic mirroring is not configured or administratively disabled."
+                ::=  {  ctDeviceEntry  15  }
+
+		ctDeviceAutomaticFailoverStatus	 OBJECT-TYPE
+                SYNTAX			INTEGER  { ok ( 1 ) , failed ( 2 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the status of the CounterACT device and whether or not it has experienced Automatic Failover. Possible states are: ok(1) Indicates that the CounterACT device is running. failed(2) Indicates that the CounterACT device has failed to connect to the Enterprise Manager for the configured timeout period."
+                ::=  {  ctDeviceEntry  16  }
+
+        ctDeviceAutomaticFailoverConfig	 OBJECT-TYPE
+                SYNTAX			INTEGER  { enabled ( 1 ) , disabled ( 2 ) }
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the status of the Automatic Failover feature on the CounterACT device. Possible states are: enabled(1) Indicates that the Automatic Failover feature is enabled on the CounterACT device. disabled(2) Indicates that the Automatic Failover feature is disabled on the CounterACT device. "
+                ::=  {  ctDeviceEntry  17  }
+
+        ctApplianceGroupName	 OBJECT-TYPE
+        		SYNTAX			OCTET STRING (SIZE(100))
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the name of the Appliance Group that the CounterACT device belongs to."
+                ::=  {  ctDeviceEntry  18  }
+        
+        ctNumberOfFailoverEndpoints  OBJECT-TYPE
+        		SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the number of endpoints handled by this CounterACT device due to an Automatic Failover assignment."
+                ::=  {  ctDeviceEntry  19  }
+        
+        ctNumberOfFailoverExcessEndpoints  OBJECT-TYPE
+				SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates the number of endpoints that exceed the CounterACT device capacity as a result of an Automatic Failover."
+                ::=  {  ctDeviceEntry  20  }
+		
+		
+		
+        dbType	OBJECT-TYPE
+                SYNTAX			DisplayString  ( SIZE ( 0 .. 255  ) )
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The installed database type and version"
+                ::=  {  database  1  }
+
+        dbWriteQuerySize	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Number of insert / update statement waiting to be executed"
+                DEFVAL			{ 0 }
+                ::=  {  database  2  }
+
+
+        cactLogPartitionName	OBJECT-TYPE
+                SYNTAX			OCTET STRING
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The name of the disk partition in which ForeScout logs reside"
+                ::=  {  counterACT  15  }
+
+        cactDbPartitionName	OBJECT-TYPE
+                SYNTAX			INTEGER
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "The disk partition in which the database resides"
+                ::=  {  counterACT  16  }
+
+        cactFloodMode	OBJECT-TYPE
+                SYNTAX			INTEGER { no-Flood ( 1 ) ,syn-Flood ( 2 ) ,probe-Flood (3) ,syn-Probe-Flood(4)}
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "Indicates whether CounterACT is being flooded"
+                ::=  {  counterACT  17  }
+
+        cactThreatLevel	OBJECT-TYPE
+                SYNTAX			INTEGER  ( 0 .. 10  )
+                ACCESS			read-only
+                STATUS			mandatory
+                DESCRIPTION
+                                "CounterACT current threat level"
+                ::=  {  counterACT  18  }
+
+        counterACTStartTrap	TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ cactEngineLastStart }
+                DESCRIPTION		"CounterACT was started"
+                ::=  1
+
+        counterACTShutDownTrap	TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ cactEngineLastShutdown }
+                DESCRIPTION		"CounterACT was stopped"
+                ::=  2
+
+        policyChangeTrap	TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ cactCurrentPolicyName }
+                DESCRIPTION		"Current policy was modified"
+                ::=  3
+
+
+        biteEventTrap	TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ biteEventIndex ,
+                biteEventSourceAddress  ,
+                biteEventTime  ,
+                biteEventType  ,
+                biteEventcounterACTOperation  ,
+		    biteEventcounterACTOperationDuration ,
+		    biteEventSpecificDetails ,
+		    biteEventDestinationAddress ,
+		    biteEventDestinationPort ,
+		    biteEventProtocol }
+                DESCRIPTION		"Bite attempt detection notification"
+                ::=  4
+
+        counterACTConnectionStatusChange TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ counterACTId ,
+                counterACTAddress ,
+                counterACTConnectionStatus ,
+                counterACTLastConnectionStatusTime }
+                DESCRIPTION		"CounterACT is connected to / disconnected from Management Server"
+                ::=  5
+
+        counterACTFloodModeChange TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ cactFloodMode}
+                DESCRIPTION		"CounterACT has detected start/end of flood attack"
+                ::=  6
+
+        scanEventTrap	TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ 	scanEventIndex,
+		    						scanEventSourceAddress ,
+                					scanEventTime ,
+		    						scanEventType,
+                					scanEventcounterACTOperation,
+		    						scanEventcounterACTOperationDuration }
+                DESCRIPTION		"Scan attempt detection notification"
+                ::=  7
+
+        probeEventTrap	TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ 
+                	probeEventIndex ,
+                	probeEventSourceAddress,
+                	probeEventTime,
+                	probeEventType,
+                	probeEventScanIndex,
+		    		probeEventDestinationAddress,
+		    		probeEventDestinationPort,
+		    		probeEventProtocol,
+		    		probeEventSpecificDetails }
+                DESCRIPTION		"Probe attempt detection notification"
+                ::=  8
+
+        serviceAttackEventTrap	TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ 	serviceAttackEventIndex,
+						            serviceAttackEventDetectionTime,
+								    serviceAttackEventDetectionMode,
+								    serviceAttackEventDestinationPort,
+								    serviceAttackEventDestinationProtocol,
+						            serviceAttackEventcounterACTOperation,
+								    serviceAttackEventcounterACTOperationDuration}
+                DESCRIPTION		"Service scan attempt detection notification"
+                ::=  9
+
+        lastSystemWarningTrap	TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ cactLastWarning }
+                DESCRIPTION		"System warning notification"
+                ::=  10
+
+		 haStatusChange TRAP-TYPE
+                ENTERPRISE              forescout
+                VARIABLES               { haStatus}
+                DESCRIPTION             "Appliance changed its status mode"
+                ::=  11
+                
+        counterACTPEParamRefreshTrap	TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ cactPEParamRefresh }
+                DESCRIPTION		"CounterACT was started"
+                ::=  12
+				
+		counterACT2ConnectionStatusChange TRAP-TYPE
+                ENTERPRISE		forescout
+                VARIABLES		{ counterACT2Id ,
+				counterACT2Id,
+                counterACT2Address ,
+				counterACT2AddressType ,
+                counterACT2ConnectionStatus ,
+                counterACT2LastConnectionStatusTime }
+                DESCRIPTION		"CounterACT is connected to / disconnected from Management Server"
+                ::=  13
+
+  
+
+
+        ctConfigurationChangedTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { fsFieldOid, fsOldValue, fsNewValue, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification indicating a configuration change. The trap attributes indicate the plugin name of service whose configuration has change. This trap also includes the property that changed as well as other information regarding the change, refer to the CounterACT documentation for more detailed specification."
+				::=  14
+        
+        ctDeviceAddedTrapNotification TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification sent whenever a CounterACT device is added to CounterACT Enterprise Manager (EM)."
+				::=  15
+				
+		ctDeviceRemovedTrapNotification TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification sent whenever a CounterACT device is removed from CounterACT Enterprise Manager (EM)."
+				::=  16
+                
+        ctDeviceLicenseStatusChangedTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, ctDeviceLicenseStatus, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification sent any time the license status changes. By default the trap contains notification attributes like appliance IP address, and more (see user guide for details). Specifically this trap severity attribute depends on the license , its type, the deployed modules and their usage: licenseValid (1) severity is cleared(1), licenseViolation(2) severity is warning(6), licenseInvalid(3) severity is major(4), licenseStatusUnknown(4) severity is indeterminate(2)."
+				::=  17
+		
+		ctDeviceNTPStatusChangedTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, ctDeviceNtpStatus, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification sent any time the network time synchronization status changes. By default the trap contains notification attributes like appliance IP address, and more (see user guide for details). Specifically this trap severity attribute depends on the NTP server state and the synchronization process: ntpSyncOk (1) severity is cleared(1). ntpSyncFailed (2) severity is major(4). ntpNotApplicable(3) severity is indeterminate(2). ntpStatusUnknown (4) severity is indeterminate(2) indicating that the CounterACT device is currently unreachable and that the current NTP status cannot be verified."
+				::=  18
+		
+		ctDeviceTrapHighCPUUtilization TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification sent indicating that the CPU utilization exceeded the administrator defined upper-bound threshold. This notification trap is generated when the CPU utilization has moved from normal state into high CPU utilization. It will be cleared by the ctDeviceTrapNormalCPUUtilization trap notification event when the CPU utilization is below the lower bound threshold set indicating that CPU utilization has returned to normal state."
+				::=  19
+		
+		ctDeviceTrapNormalCPUUtilization TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification sent indicating that the CPU utilization has returned to normal state. It is sent if and only if the CPU utilization was previously in high CPU utilization state and since then the CPU utilization has dropped below the administrator defined lower threshold."
+				::=  20
+		
+		ctDeviceHighBandwidthUtilizationTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification sent indicating that the bandwidth utilization exceeded the administrator defined upper-bound threshold. This notification trap is generated when the bandwidth utilization has moved from normal state into high bandwidth utilization. Bandwidth utilization accounts for CounterACT internal communication and the packet engine monitored traffic. Exceeding the recommended threshold may impact the appliance performance. The high bandwidth utilization will be cleared by the ctDeviceTrapNormalBandwidthUtilization trap notification event when the bandwidth utilization is below the lower bound threshold; indicating that bandwidth utilization has returned to normal state."
+				::=  21
+		
+		ctDeviceNormalBandwidthUtilizationTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification sent indicating that the CounterACT device bandwidth utilization has returned to normal state. It is sent if and only if the bandwidth utilization was previously in high bandwidth utilization state and since then the bandwidth utilization has dropped below the administrator defined lower threshold."
+				::=  22
+		
+		ctDeviceTrapHighMemorySwapping TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification sent indicating that the CounterACT device is exceeded the administrator defined upper-bound threshold. This notification trap is generated when the large volume of data is moved to or from the RAM and persistent store (disk) exceeding the administrator defined threshold (potentially slowing the CounterACT device). ctDeviceTrapNormalMemorySwapping trap notification event will be sent when the swapped data size will be lower than the administrator defined lower bound threshold indicating that the appliance returned to normal state."
+				::=  23
+		
+		ctDeviceTrapNormalMemorySwapping TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification sent indicating that the appliance memory swap data size has returned to normal state. This event is sent if and only if the appliance was previously in high memory swap state and since then the swapped memory data size has dropped below the administrator defined lower threshold."
+				::=  24
+		
+		ctDeviceTrapEndpointCapacityExceeded TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification indicating that the number of managed endpoints has exceeded the operator defined threshold; it is sent if and only if the appliance was within the capacity as specified by its license and the operator defined lower bound threshold. This trap notification is similar to other CounterACT notification containing attributes describing the appliance IP (and more, refer to the CounterACT documentation for more details) specifically this trap severity is set to warning (6) and is cleared by the ctDeviceTrapEndpointCapacityNormal event (sent when the number of managed endpoints drops below the lower bound administrator set threshold)."
+				::=  25
+		
+		ctDeviceTrapEndpointCapacityNormal TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification sent indicating that the number of managed endpoint has returned to normal state (within the license and the administrator defined threshold). It is sent if and only if the number of managed endpoint capacity was previously in exceeding capacity state and since then the number of managed endpoints has dropped below the administrator defined lower threshold."
+				::=  26
+		
+		ctDevicePacketEngineStatusChangedTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, ctDeviceEngineStatus, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification sent any time the packet engine status changes. By default the trap contains notification attributes like appliance IP address, and more (see user guide for details). Specifically this trap severity attribute depends on the packet engine new state: engineReady (1)= cleared(1), engineInitlizing (2)=Indeterminate(2), engineDown(3)=critical(3), engineStatusUnknown (4)=indeterminate(2),engineNotApplicable (5)=warning(6)"
+				::=  27
+				
+		ctDeviceTrapHighPacketLoss TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification sent indicating that the packet engine exceeded the administrator defined upper-bound threshold. This notification trap is generated when the packet engine exceeded the administrator defined threshold for number of packets dropped over the last 30 seconds and indicating that the packet engine has moved from normal state into high packet loss state. Potentially affecting HTTP redirect and Virtual Firewall, this state will be cleared by the ctDeviceTrapNormalPacketLoss trap notification event when the number of dropped packets will be lower than the administrator defined lower bound threshold indicating that the packet engine has returned to normal state."
+				::=  28
+		
+		ctDeviceTrapNormalPacketLoss TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Alarm notification sent indicating that the packet engine has returned to normal state. It is sent if and only if the packet engine status was previously in high packet loss state and since then the number of lost packets has dropped below the administrator defined lower threshold."
+				::=  29
+				
+		ctDeviceHaStatusChangedTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, ctDeviceHaStatus, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification sent any time the High Availability (HA) status changes. By default the trap contains notification attributes like appliance IP address, and more (see user guide for details). Specifically this trap severity attribute depends on the active and or passive (standby node) state: haStatusOK (1) severity is cleared(1), haStandbyDisconnected (2) severity is major(4), haStandbySyncPending (3) severity is minor(5),  haInMaintenanceMode(4)severity is warning(6), haNotSupported(5) severity is  cleared(1), haStatusUnknown(6) severity is Indeterminate(2). See CounterACT documentation for more details."
+				::=  30
+				
+		ctDeviceChannelStatusChangedTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, ctDeviceChannelStatus, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification sent any time the CounterACT device packet engine monitored traffic (channel) status changes. By default the trap contains notification attributes like appliance IP address, and more (see user guide for details). Specifically this trap severity attribute depends on the status monitored channel traffic seen by the packet engine. The trap severity will vary depending on the channel state: channelsOk (1) severity is cleared(1). channelsWarning (2) severity is warning(6), hannelsError (3) severity is critical(6). channelsUnknown (4) severity is indeterminate(2) indicating that the traffic mirroring status cannot be verified at this time (for example if the CounterACT device is down or unreachable). channelsNotApplicable (5) severity is warning(6) indicating that the network interfaces configuration for traffic mirroring is not configured or administratively disabled."
+				::=  31
+				
+		ctDeviceActionOnHoldStatusChanged TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, ctDeviceActionsOnHoldStatus, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification sent any time the CounterACT device outgoing action queue state changes with respect to blocked actions in the queue. By default the trap contains notification attributes like appliance IP address, and more (see user guide for details). Specifically this trap severity attribute depends on the status of the queue and the existence of blocked actions. The trap severity will vary depending on the queue state: actionsOk(1) severity is cleared(1), actionsBlockedOnExceedingTreshold (2) severity is major(4), actionsBlockStatusUnknown (3) severity is indeterminate(2) indicating that the queue status cannot be verify if the CounterACT has actions in pending state and if they are blocked or not at this time (for example if the CounterACT device is down or unreachable)"
+				::=  32
+				
+		ctDeviceConnectionStatusChangedTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, ctDeviceConnectionStatus, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "Trap notification sent any time the CounterACT device connectivity status changes. By default the trap contains notification attributes like appliance IP address, and more (see user guide for details). Specifically that the trap severity depends on the ctDeviceConnectionStatus where connectionOK(1) severity is cleared(1). connectionDegraded (2) severity is indeterminate(2) possibly due to degraded network connection or appliance overload. connectionFailed(3) severity is critical(3) possibly due to network outage or appliance down. connectionStatusUnknown (4) severity is indeterminate(2). connectionStatusNotApplicable (5) severity is cleared(1)"
+				::=  33
+
+		ctDeviceAutomaticFailoverStatusChangedTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, ctDeviceAutomaticFailoverStatus, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "This trap notification is sent when there is a change in the ctDeviceAutomaticFailoverStatus MIB attribute."
+				::=  34
+				
+		ctDeviceFailoverCapacityExceeded TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "This trap notification is sent when the CounterACT device has exceeded its configured capacity as a result of an Automatic Failover."
+				::=  35
+
+		ctDeviceFailoverCapacityNormal TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { ctDeviceId, ctDeviceIpAddress, ctDeviceIpAddressType, fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "This trap notification is sent when the CounterACT device no longer exceeds its configured capacity."
+				::=  36
+
+		ctTestTrap TRAP-TYPE
+				ENTERPRISE		forescout
+				VARIABLES       { fsTrapSeverity, fsTrapTime, fsTrapId }
+				DESCRIPTION   "TEST - This trap is used for testing."
+				::=  37
+
+END
